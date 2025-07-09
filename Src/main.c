@@ -36,6 +36,7 @@
 #endif
 
 void SystemClock_Config(void);
+void speaker_beep(uint32_t frequency, uint32_t duration);
 
 //------------------------------------------------------------------------
 // Global variables set externally
@@ -171,15 +172,18 @@ static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes 
 
 void speaker_beep(uint32_t frequency, uint32_t duration)
 {
+    if (frequency == 0) return; // Prevent division by zero
+    
     uint32_t half_period_us = 500000 / frequency; // полпериода в микросекундах
+    uint32_t half_period_ms = (half_period_us + 999) / 1000; // Convert to ms with rounding up
     uint32_t cycles = (duration * 1000) / (half_period_us * 2);
 
     for(uint32_t i = 0; i < cycles; i++)
     {
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);   // HIGH
-        delay_us(half_period_us);
+        HAL_Delay(half_period_ms);
         HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET); // LOW
-        delay_us(half_period_us);
+        HAL_Delay(half_period_ms);
     }
 }
 
